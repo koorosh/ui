@@ -1,5 +1,7 @@
 import React from "react";
 import * as protos from "@cockroachlabs/crdb-protobuf-client";
+import classNames from "classnames/bind";
+
 import { makeStatementsColumns } from "../statementsTable";
 import {
   SortedTable,
@@ -17,15 +19,26 @@ import { SqlBox } from "../sql";
 import { aggregateStatements } from "../transactionsPage/utils";
 import Long from "long";
 import { Loading } from "../loading";
+import { SummaryCard } from "../summaryCard";
+import { Bytes, Duration, formatNumberForDisplay } from "src/util";
+
+import summaryCardStyles from "../summaryCard/summaryCard.module.scss";
 
 const { containerClass } = tableClasses;
 
 type Statement = protos.cockroach.server.serverpb.StatementsResponse.ICollectedStatementStatistics;
+type TransactionStats = protos.cockroach.sql.ITransactionStatistics;
+
+const summaryCardStylesCx = classNames.bind(summaryCardStyles);
 
 interface TransactionDetailsProps {
   statements?: Statement[];
+  transactionStats?: TransactionStats;
   lastReset?: string | Date;
-  handleDetails: (statementIds: Long[] | null) => void;
+  handleDetails: (
+    statementIds: Long[] | null,
+    transactionStats: TransactionStats | null,
+  ) => void;
   error?: Error | null;
 }
 
@@ -61,12 +74,12 @@ export class TransactionDetails extends React.Component<
   };
 
   render() {
-    const { statements, handleDetails, error } = this.props;
+    const { statements, transactionStats, handleDetails, error } = this.props;
     return (
       <div>
         <section className={baseHeadingClasses.wrapper}>
           <Button
-            onClick={() => handleDetails(null)}
+            onClick={() => handleDetails(null, null)}
             type="unstyled-link"
             size="small"
             icon={BackIcon}
@@ -78,12 +91,13 @@ export class TransactionDetails extends React.Component<
         </section>
         <Loading
           error={error}
-          loading={!statements}
+          loading={!statements || !transactionStats}
           render={() => {
-            const { statements, lastReset } = this.props;
+            const { statements, transactionStats, lastReset } = this.props;
             const { sortSetting, pagination } = this.state;
             const statementsSummary = collectStatementsText(statements);
             const aggregatedStatements = aggregateStatements(statements);
+            const duration = (v: number) => Duration(v * 1e9);
             return (
               <React.Fragment>
                 <section className={containerClass}>
@@ -95,6 +109,95 @@ export class TransactionDetails extends React.Component<
                     arrayItemName={"statements for this transaction"}
                     activeFilters={0}
                   />
+                  <SummaryCard>
+                    <div className={summaryCardStylesCx("summary--card__item")}>
+                      <h3
+                        className={summaryCardStylesCx(
+                          "summary--card__item--label",
+                        )}
+                      >
+                        Mean transaction time
+                      </h3>
+                      <p
+                        className={summaryCardStylesCx(
+                          "summary--card__item--value",
+                        )}
+                      >
+                        {formatNumberForDisplay(
+                          transactionStats.service_lat.mean,
+                          duration,
+                        )}
+                      </p>
+                    </div>
+                    <p
+                      className={summaryCardStylesCx("summary--card__divider")}
+                    />
+                    <div>
+                      <h3>Transaction resource usage</h3>
+                    </div>
+                    <div className={summaryCardStylesCx("summary--card__item")}>
+                      <h4
+                        className={summaryCardStylesCx(
+                          "summary--card__item--label",
+                        )}
+                      >
+                        Mean rows/bytes read
+                      </h4>
+                      <p
+                        className={summaryCardStylesCx(
+                          "summary--card__item--value",
+                        )}
+                      >
+                        {formatNumberForDisplay(
+                          transactionStats.rows_read.mean,
+                        )}
+                        {" / "}
+                        {formatNumberForDisplay(
+                          transactionStats.bytes_read.mean,
+                          Bytes,
+                        )}
+                      </p>
+                    </div>
+                    <div className={summaryCardStylesCx("summary--card__item")}>
+                      <h4
+                        className={summaryCardStylesCx(
+                          "summary--card__item--label",
+                        )}
+                      >
+                        Max memory usage
+                      </h4>
+                      <p
+                        className={summaryCardStylesCx(
+                          "summary--card__item--value",
+                        )}
+                      >
+                        {formatNumberForDisplay(
+                          transactionStats.exec_stats.max_mem_usage.mean,
+                          Bytes,
+                        )}
+                      </p>
+                    </div>
+                    <div className={summaryCardStylesCx("summary--card__item")}>
+                      <h4
+                        className={summaryCardStylesCx(
+                          "summary--card__item--label",
+                        )}
+                      >
+                        Bytes read over network
+                      </h4>
+                      <p
+                        className={summaryCardStylesCx(
+                          "summary--card__item--value",
+                        )}
+                      >
+                        {formatNumberForDisplay(
+                          transactionStats.exec_stats.network_bytes.mean,
+                          Bytes,
+                        )}
+                      </p>
+                    </div>
+                    {/* TODO(asubiotto): Add temporary disk usage */}
+                  </SummaryCard>
                   <SortedTable
                     data={aggregatedStatements}
                     columns={makeStatementsColumns(
