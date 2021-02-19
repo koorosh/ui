@@ -436,7 +436,7 @@ export class StatementDetails extends React.Component<
           </Row>
           <Row gutter={16}>
             <Col className="gutter-row" span={8}>
-              <SummaryCard>
+              <SummaryCard className={cx("summary-card")}>
                 <Row>
                   <Col>
                     <div className={summaryCardStylesCx("summary--card__item")}>
@@ -469,10 +469,10 @@ export class StatementDetails extends React.Component<
                   </Col>
                 </Row>
               </SummaryCard>
-              <SummaryCard>
+              <SummaryCard className={cx("summary-card")}>
                 <Heading type="h5">Resource usage</Heading>
-                <Row gutter={24}>
-                  <Col span={12}>
+                <Row>
+                  <Col>
                     <div className={summaryCardStylesCx("summary--card__item")}>
                       <Text type="body-strong">Mean rows/bytes read</Text>
                       <Text>
@@ -481,8 +481,6 @@ export class StatementDetails extends React.Component<
                         {formatNumberForDisplay(stats.bytes_read.mean, Bytes)}
                       </Text>
                     </div>
-                  </Col>
-                  <Col span={12}>
                     <div className={summaryCardStylesCx("summary--card__item")}>
                       <Text type="body-strong">Max memory usage</Text>
                       <Text>
@@ -506,7 +504,7 @@ export class StatementDetails extends React.Component<
               </SummaryCard>
             </Col>
             <Col className="gutter-row" span={8}>
-              <SummaryCard>
+              <SummaryCard className={cx("summary-card")}>
                 <Heading type="h5">Statement details</Heading>
                 <div className={summaryCardStylesCx("summary--card__item")}>
                   <Text type="body-strong">App</Text>
