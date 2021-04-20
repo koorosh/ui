@@ -58,9 +58,8 @@ interface OwnProps {
   onPageChanged?: (newPage: number) => void;
   onSortingChange?: (columnName: string, tableName: string) => void;
   onSessionClick?: () => void;
-  onSessionActionClicked?: (
-    action: "Terminate Statement" | "Terminate Session",
-  ) => void;
+  onTerminateSessionClick?: () => void;
+  onTerminateStatementClick?: () => void;
 }
 
 export interface SessionsPageState {
@@ -189,7 +188,8 @@ export class SessionsPage extends React.Component<
               this.terminateSessionRef,
               this.terminateQueryRef,
               this.props.onSessionClick,
-              this.props.onSessionActionClicked,
+              this.props.onTerminateStatementClick,
+              this.props.onTerminateSessionClick,
             )}
             renderNoResult={
               <EmptyTable

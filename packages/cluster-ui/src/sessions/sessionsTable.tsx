@@ -69,12 +69,7 @@ const SessionLink = (props: { session: ISession; onClick?: () => void }) => {
       tableTitle
       title={<>Session started at {start.format(DATE_FORMAT)}</>}
     >
-      <Link
-        onClick={() => {
-          onClick && onClick();
-        }}
-        to={`${base}/${encodeURIComponent(sessionID)}`}
-      >
+      <Link onClick={onClick} to={`${base}/${encodeURIComponent(sessionID)}`}>
         <div>{start.fromNow(true)}</div>
       </Link>
     </Tooltip2>
@@ -101,9 +96,8 @@ export function makeSessionsColumns(
   terminateSessionRef?: React.RefObject<TerminateSessionModalRef>,
   terminateQueryRef?: React.RefObject<TerminateQueryModalRef>,
   onSessionClick?: () => void,
-  onSessionActionClicked?: (
-    action: "Terminate Statement" | "Terminate Session",
-  ) => void,
+  onTerminateSessionClick?: () => void,
+  onTerminateStatementClick?: () => void,
 ): ColumnDescriptor<SessionInfo>[] {
   return [
     {
@@ -203,8 +197,7 @@ export function makeSessionsColumns(
         ) => {
           switch (value) {
             case "terminateSession":
-              onSessionActionClicked &&
-                onSessionActionClicked("Terminate Session");
+              onTerminateSessionClick && onTerminateSessionClick();
               terminateSessionRef?.current?.showModalFor({
                 session_id: session.id,
                 node_id: session.node_id.toString(),
@@ -212,8 +205,7 @@ export function makeSessionsColumns(
               break;
             case "terminateStatement":
               if (session.active_queries?.length > 0) {
-                onSessionActionClicked &&
-                  onSessionActionClicked("Terminate Statement");
+                onTerminateStatementClick && onTerminateStatementClick();
                 terminateQueryRef?.current?.showModalFor({
                   query_id: session.active_queries[0].id,
                   node_id: session.node_id.toString(),
